@@ -2,45 +2,43 @@ import { useEffect, useState } from 'react';
 
 function App() {
   const [loading, setLoading] = useState(true);
-  const [coins, setCoins] = useState([]);
-  const [price, setPrice] = useState('none');
-  const [balance, setBalance] = useState(0);
+  const [movies, setMovies] = useState([]);
+  const getMovies = async () => {
+    const json = await (
+      await fetch(
+        'https://yts.mx/api/v2/list_movies.json?minimum_rating=9&sort_by=year'
+      )
+    ).json();
+    setMovies(json.data.movies);
+    setLoading(false);
+  };
   useEffect(() => {
-    fetch('https://api.coinpaprika.com/v1/tickers')
-      .then((response) => response.json())
-      .then((json) => {
-        setCoins(json);
-        setLoading(false);
-      });
+    getMovies();
   }, []);
-  const onChangeSelect = (event) => {
-    setPrice(event.target.value);
-  };
-  const onChangeBalance = (event) => {
-    setBalance(event.target.value);
-  };
+  console.log(movies);
   return (
     <div>
-      <h1>The Coins! {loading ? '' : `(${coins.length})`}</h1>
       {loading ? (
-        <strong>Loading...</strong>
+        <h1>Loading...</h1>
       ) : (
-        <select onChange={onChangeSelect}>
-          <option key='-1' value='none'>
-            Select a coin...
-          </option>
-          {coins.map((coin, idx) => (
-            <option key={idx} value={coin.quotes.USD.price}>
-              {coin.name} ({coin.symbol}): ${coin.quotes.USD.price} USD
-            </option>
+        <div>
+          {movies.map((movie) => (
+            <div key={movie.id}>
+              <img src={movie.medium_cover_image} alt='medium_cover_image' />
+              <h2>
+                {movie.title} ({movie.year})
+              </h2>
+              <span>{movie.runtime} minutes</span>
+              <p>{movie.summary}</p>
+              <ul>
+                {movie.genres.map((genre) => (
+                  <li key={genre}>{genre}</li>
+                ))}
+              </ul>
+            </div>
           ))}
-        </select>
+        </div>
       )}
-
-      <hr />
-      <span>If you have $</span>
-      <input value={balance} onChange={onChangeBalance} type='number' />
-      <span>, you can get {price === 'none' ? 0 : balance / price} coins</span>
     </div>
   );
 }
